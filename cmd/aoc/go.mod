@@ -1,4 +1,4 @@
-module aoc
+module github.com/alexrefshauge/advent-of-code/cmd/aoc
 
 go 1.23.3
 
