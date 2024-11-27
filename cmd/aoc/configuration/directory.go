@@ -1,7 +1,7 @@
 package configuration
 
 import (
-	"aoc/configurationKeys"
+	"github.com/alexrefshauge/advent-of-code/cmd/aoc/configurationKeys"
 	"os"
 
 	"github.com/manifoldco/promptui"

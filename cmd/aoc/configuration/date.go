@@ -1,9 +1,9 @@
 package configuration
 
 import (
-	"aoc/configurationKeys"
 	"errors"
 	"fmt"
+	"github.com/alexrefshauge/advent-of-code/cmd/aoc/configurationKeys"
 	"time"
 
 	"github.com/spf13/viper"

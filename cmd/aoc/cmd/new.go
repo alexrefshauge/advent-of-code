@@ -4,9 +4,9 @@ Copyright © 2024 Alexander Refshauge
 package cmd
 
 import (
-	"aoc/configuration"
-	"aoc/configurationKeys"
 	"fmt"
+	"github.com/alexrefshauge/advent-of-code/cmd/aoc/configuration"
+	"github.com/alexrefshauge/advent-of-code/cmd/aoc/configurationKeys"
 	"os"
 	"path"
 
