@@ -48,6 +48,7 @@ func part1(input string) string {
 	return fmt.Sprintf("%d", total)
 }
 
+//lint:ignore U1000 First approach
 func part2_slow(input string) string {
 	left, right := formatInput(input)
 	total := 0
