@@ -69,20 +69,20 @@ func part2(input string) string {
 	left, right := formatInput(input)
 	total := 0
 
-	rightMap := make(map[int]int, 0)
+	rightCount := make(map[int]int, 0)
 
 	for _, r := range right {
-		val, ok := rightMap[r]
+		val, ok := rightCount[r]
 		if !ok {
-			rightMap[r] = 1
+			rightCount[r] = 1
 			continue
 		}
 		
-		rightMap[r] = val+1
+		rightCount[r] = val+1
 	}
 
 	for _, l := range left {
-		count, ok := rightMap[l]
+		count, ok := rightCount[l]
 		if !ok {
 			continue
 		}
