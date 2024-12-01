@@ -40,3 +40,10 @@ func parseTestInput(input string) (string, string) {
 
 	return input[:i], input[i+2:]
 }
+func Benchmark_day1_part1(b *testing.B) {
+	part1(input)
+}
+
+func Benchmark_day1_part2(b *testing.B) {
+	part2(input)
+}

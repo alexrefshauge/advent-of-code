@@ -48,7 +48,7 @@ func part1(input string) string {
 	return fmt.Sprintf("%d", total)
 }
 
-func part2(input string) string {
+func part2_slow(input string) string {
 	left, right := formatInput(input)
 	total := 0
 
@@ -60,6 +60,34 @@ func part2(input string) string {
 			}
 		}
 		total += count * l
+	}
+
+	return fmt.Sprintf("%d", total)
+}
+
+func part2(input string) string {
+	left, right := formatInput(input)
+	total := 0
+
+	rightMap := make(map[int]int, 0)
+
+	for _, r := range right {
+		val, ok := rightMap[r]
+		if !ok {
+			rightMap[r] = 1
+			continue
+		}
+		
+		rightMap[r] = val+1
+	}
+
+	for _, l := range left {
+		count, ok := rightMap[l]
+		if !ok {
+			continue
+		}
+
+		total += count*l
 	}
 
 	return fmt.Sprintf("%d", total)
