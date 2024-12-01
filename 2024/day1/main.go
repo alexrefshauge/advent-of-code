@@ -11,11 +11,6 @@ import (
 
 //go:embed input.txt
 var input string
-var left, right []int
-
-func init() {
-	left, right = formatInput(input)
-}
 
 func main() {
 	var part int
@@ -25,11 +20,11 @@ func main() {
 
 	var answer string
 	if part == 1 {
-		answer = part1()
+		answer = part1(input)
 	} else if part == 2 {
-		answer = part2()
+		answer = part2(input)
 	} else {
-		panic(fmt.Errorf("unable to run part %d", part))	
+		panic(fmt.Errorf("part must be 1 or 2 %d", part))	
 	}
 
 	fmt.Println("Output:", answer)
@@ -39,7 +34,8 @@ func main() {
 	}
 }
 
-func part1() string {
+func part1(input string) string {
+	left, right := formatInput(input)
 	sort.Ints(left)
 	sort.Ints(right)
 
@@ -52,7 +48,8 @@ func part1() string {
 	return fmt.Sprintf("%d", total)
 }
 
-func part2() string {
+func part2(input string) string {
+	left, right := formatInput(input)
 	total := 0
 
 	for _, l := range left {
@@ -62,8 +59,6 @@ func part2() string {
 				count++
 			}
 		}
-
-		fmt.Println(l, count)
 		total += count * l
 	}
 
