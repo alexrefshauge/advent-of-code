@@ -38,8 +38,9 @@ func part1(input string) string {
 	total := 0
 
 	for i := range len(input) {
-		l, r := parseMul(input[i:])
+		l, r, skip := parseMul(input[i:])
 		total += l*r
+		i+= skip
 	}
 
 	return fmt.Sprintf("%d", total)
@@ -57,9 +58,11 @@ func part2(input string) string {
 		}
 
 
-		if doMul{
-		l, r := parseMul(input[i:])
-		total += l*r}
+		if doMul {
+			l, r, skip := parseMul(input[i:])
+			total += l*r
+			i+= skip
+		}
 	}
 
 	return fmt.Sprintf("%d", total)
@@ -75,9 +78,10 @@ func parseDo(buf string) (bool, bool) {
 	return false, false
 }
 
-func parseMul(buf string) (int, int) {
+//returns left, right and character count
+func parseMul(buf string) (int, int, int) {
 	if !strings.HasPrefix(buf, "mul(") {
-		return 0, 0
+		return 0, 0, 0
 	}
 
 	buf = strings.TrimPrefix(buf, "mul(")
@@ -94,7 +98,7 @@ func parseMul(buf string) (int, int) {
 	parts := strings.Split(inside, ",")
 
 	if len(parts) != 2 {
-		return 0, 0
+		return 0, 0, 0
 	}
 
 	left := parts[0]
@@ -102,12 +106,12 @@ func parseMul(buf string) (int, int) {
 
 	lNum, err := strconv.Atoi(left)
 	if err != nil {
-		return 0, 0
+		return 0, 0, 0
 	}
 	rNum, err := strconv.Atoi(right)
 	if err != nil {
-		return 0, 0
+		return 0, 0, 0
 	}
 
-	return lNum, rNum
+	return lNum, rNum, iEnd-1
 }
