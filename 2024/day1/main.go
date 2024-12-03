@@ -66,6 +66,7 @@ func part2_slow(input string) string {
 	return fmt.Sprintf("%d", total)
 }
 
+//Using map, almost 5 times faster
 func part2(input string) string {
 	left, right := formatInput(input)
 	total := 0
