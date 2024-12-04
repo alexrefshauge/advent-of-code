@@ -71,17 +71,13 @@ func part2(input string) string {
 				continue
 			}
 
-			rows := block[y-1 : y+2]
-			chunk := make([]string, 0, 2)
-			for i, r := range rows {
-				if i == 1 {
-					continue
-				}
-				chunk = append(chunk, string(rune(r[x-1]))+string(rune(r[x+1])))
-			}
+			nw := string(rune(block[y-1][x-1]))
+			ne := string(rune(block[y-1][x+1]))
+			sw := string(rune(block[y+1][x-1]))
+			se := string(rune(block[y+1][x+1]))
 
 			for _, m := range masks {
-				if m == chunk[0]+chunk[1] {
+				if m == nw+ne+sw+se {
 					total++
 					break
 				}
