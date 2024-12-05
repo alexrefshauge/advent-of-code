@@ -61,12 +61,11 @@ func part2(input string) string {
 	width := len(block[0])
 	height := len(block)
 
-	for x := range width {
-		for y := range height {
+	for y := range height {
+		for x := range width {
 			if x == 0 || y == 0 || x == width-1 || y == height-1 {
 				continue
 			}
-
 			if rune(block[y][x]) != 'A' {
 				continue
 			}
