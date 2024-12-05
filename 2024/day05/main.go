@@ -1,11 +1,12 @@
 package main
 
 import (
+	"day5/update"
 	_ "embed"
 	"flag"
 	"fmt"
 	"os"
-	"slices"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -35,10 +36,10 @@ func main() {
 	}
 }
 
-func part1(input string) string {
-	total := 0
+func parse(input string) (map[int][]int, [][]int) {
 
 	ruleMap := make(map[int][]int)
+	updates := make([][]int, 0)
 	parts := strings.Split(input, "\n\n")
 	ruleLines := strings.Split(parts[0], "\n")
 	updateLines := strings.Split(parts[1], "\n")
@@ -55,89 +56,38 @@ func part1(input string) string {
 		for _, n := range strings.Split(line, ",") {
 			num, _ := strconv.Atoi(n)
 			pages = append(pages, num)
-
 		}
-		if isValid(ruleMap, pages) {
-			total += mid(pages)
-		}
+		updates = append(updates, pages)
+	}
 
+	return ruleMap, updates
+}
+
+func part1(input string) string {
+	rules, updates := parse(input)
+	total := 0
+
+	for _, pages := range updates {
+		u := update.New(rules, pages)
+		if sort.IsSorted(u) {
+			total += u.Mid()
+		}
 	}
 
 	return fmt.Sprintf("%d", total)
 }
 
 func part2(input string) string {
+	rules, updates := parse(input)
 	total := 0
 
-	ruleMap := make(map[int][]int)
-	parts := strings.Split(input, "\n\n")
-	ruleLines := strings.Split(parts[0], "\n")
-	updateLines := strings.Split(parts[1], "\n")
-
-	for _, line := range ruleLines {
-		nums := strings.Split(line, "|")
-		l, _ := strconv.Atoi(nums[0])
-		r, _ := strconv.Atoi(nums[1])
-		ruleMap[l] = append(ruleMap[l], r)
-	}
-
-	for _, line := range updateLines {
-		pages := make([]int, 0)
-		for _, n := range strings.Split(line, ",") {
-			num, _ := strconv.Atoi(n)
-			pages = append(pages, num)
-
-		}
-		if !isValid(ruleMap, pages) {
-			sorted := false
-			for sorted == false {
-				sorted = sort(ruleMap, pages)
-			}
-			total += mid(pages)
+	for _, pages := range updates {
+		u := update.New(rules, pages)
+		if !sort.IsSorted(u) {
+			sort.Sort(u)
+			total += u.Mid()
 		}
 	}
 
 	return fmt.Sprintf("%d", total)
-}
-
-func mid(nums []int) int {
-	i := (len(nums) - 1) / 2
-	return nums[i]
-}
-
-func isValid(ruleMap map[int][]int, pages []int) bool {
-	for i, p := range pages {
-		rules, ok := ruleMap[p]
-		if !ok {
-			continue
-		}
-		j := i
-		for j >= 0 {
-			if slices.Contains[[]int](rules, pages[j]) {
-				return false
-			}
-			j--
-		}
-	}
-	return true
-}
-
-func sort(ruleMap map[int][]int, pages []int) bool {
-	for i, p := range pages {
-		rules, ok := ruleMap[p]
-		if !ok {
-			continue
-		}
-		j := i - 1
-		for j >= 0 {
-			if slices.Contains[[]int](rules, pages[j]) {
-				temp := pages[i]
-				pages[i] = pages[j]
-				pages[j] = temp
-				return false
-			}
-			j--
-		}
-	}
-	return true
 }
