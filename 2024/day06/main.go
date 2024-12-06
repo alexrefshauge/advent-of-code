@@ -41,85 +41,98 @@ func part1(input string) string {
 	x, y := findStart(lines)
 	hDir := 0
 	vDir := -1
-	for x > 0 && y > 0 && x < len(lines[0])-1 && y < len(lines)-1 {
+	for isInside(x, y, lines) {
 		if !visited[hash(x, y)] {
 			total++
 			visited[hash(x, y)] = true
 		}
 
-		if lines[y+vDir][x+hDir] == '#' {
+		if isInside(x+hDir, y+vDir, lines) && lines[y+vDir][x+hDir] == '#' {
 			hDir, vDir = turn(hDir, vDir)
 		}
 
 		x += hDir
 		y += vDir
-
 	}
 
-	return fmt.Sprintf("%d", total+1)
+	return fmt.Sprintf("%d", total)
 }
 
 func part2(input string) string {
-
-	lines := strings.Split(input, "\n")
+	lines := strings.Split(strings.TrimRight(input, "\n"), "\n")
 	x, y := findStart(lines)
 	hDir := 0
 	vDir := -1
 
-	lastTurns := make([][]int, 0)
 	newObstacles := make([][]int, 0)
 
-	for x > 0 && y > 0 && x < len(lines[0])-1 && y < len(lines)-1 {
-		if lines[y+vDir][x+hDir] == '#' {
-			lastTurns = append(lastTurns, []int{x, y, hDir, vDir})
-			hDir, vDir = turn(hDir, vDir)
-		}
-
-		x += hDir
-		y += vDir
-		for _, o := range checkLoop(lines, lastTurns, x, y, hDir, vDir) {
+	for isInside(x, y, lines) {
+		o := []int{x + hDir, y + vDir}
+		if checkLoop(lines, x, y, hDir, vDir) && lines[y+vDir][x+hDir] != '#' {
 			if len(o) != 0 && !exists(newObstacles, o) {
 				newObstacles = append(newObstacles, o)
 			}
 		}
+
+		if isInside(x+hDir, y+vDir, lines) && lines[y+vDir][x+hDir] == '#' {
+			hDir, vDir = turn(hDir, vDir)
+			continue
+		}
+
+		x += hDir
+		y += vDir
+	}
+	return fmt.Sprintf("%d", len(newObstacles))
+}
+
+func checkLoop(lines []string, x, y int, hDir, vDir int) bool {
+	hash := make(map[string]bool)
+	hash[hashTurn(x, y, hDir, vDir)] = true
+
+	if !isInside(x+hDir, y+vDir, lines) {
+		return false
 	}
 
-	fmt.Println(newObstacles)
-	return fmt.Sprintf("%d", len(newObstacles))
+	hDir, vDir = turn(hDir, vDir)
+
+	for isInside(x, y, lines) {
+		if !isInside(x+hDir, y+vDir, lines) {
+			return false
+		}
+
+		if isInside(x+hDir, y+vDir, lines) && lines[y+vDir][x+hDir] == '#' {
+			hash[hashTurn(x, y, hDir, vDir)] = true
+			hDir, vDir = turn(hDir, vDir)
+			continue
+		}
+
+		x += hDir
+		y += vDir
+
+		if hash[hashTurn(x, y, hDir, vDir)] {
+			return true
+		}
+
+	}
+	return false
+}
+
+func hashTurn(x, y, hDir, vDir int) string {
+	return fmt.Sprintf("%d,%d,%d,%d", x, y, hDir, vDir)
 }
 
 func exists(all [][]int, n []int) bool {
 	for _, o := range all {
 		if o[0] == n[0] && o[1] == n[1] {
+			fmt.Println("dupe: ", o, n)
 			return true
 		}
 	}
 	return false
 }
 
-func checkLoop(lines []string, lastTurns [][]int, x, y, hDir, vDir int) [][]int {
-	options := make([][]int, 0)
-	startX := x
-	startY := y
-	hh, vv := turn(hDir, vDir)
-	obstaclePos := []int{x + hDir, y + vDir}
-
-	for _, loopTurn := range lastTurns {
-
-		for x > 0 && y > 0 && x < len(lines[0])-1 && y < len(lines)-1 {
-			x += hh
-			y += vv
-
-			if x == loopTurn[0] && y == loopTurn[1] && hh == loopTurn[2] && vv == loopTurn[3] {
-				options = append(options, obstaclePos)
-			}
-		}
-
-		x = startX
-		y = startY
-	}
-
-	return options
+func isInside(x, y int, lines []string) bool {
+	return x >= 0 && y >= 0 && x < len(lines[0]) && y < len(lines)
 }
 
 func turn(h, v int) (int, int) {
