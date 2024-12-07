@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/schollz/progressbar/v3"
 )
@@ -26,7 +27,7 @@ func main() {
 	} else if part == 2 {
 		answer = part2(input)
 	} else {
-		panic(fmt.Errorf("part must be 1 or 2 %d", part))	
+		panic(fmt.Errorf("part must be 1 or 2 %d", part))
 	}
 
 	fmt.Println("Output:", answer)
@@ -43,10 +44,10 @@ const (
 )
 
 var (
-	operations = map[int]func(a,b uint64)uint64 {
-		add: func(a,b uint64) uint64 {return a+b},
-		mul: func(a,b uint64) uint64 {return a*b},
-		con: func(a,b uint64) uint64 {
+	operations = map[int]func(a, b uint64) uint64{
+		add: func(a, b uint64) uint64 { return a + b },
+		mul: func(a, b uint64) uint64 { return a * b },
+		con: func(a, b uint64) uint64 {
 			res, err := strconv.ParseUint(fmt.Sprintf("%d%d", a, b), 10, 64)
 			if err != nil {
 				panic(err)
@@ -65,35 +66,57 @@ func part2(input string) string {
 }
 
 func sumValidCalculations(input string, base int) uint64 {
-	var result uint64 = 0
+	resultQueue := make(chan uint64)
+	var running sync.WaitGroup
 	calibrations := strings.Split(strings.TrimRight(input, "\n"), "\n")
-	bar := progressbar.Default(int64(len(calibrations)))
+	bar := progressbar.Default(int64(len(calibrations)), "Finding valid calculations")
 	for _, l := range calibrations {
 		target, nums := parseCal(l)
-		opCount := len(nums)-1
-		bar.Add(1)
-		runOnAll(opCount, func(ops []int) bool {
-			var accumulator uint64 = uint64(nums[0])
-			for iOp, op := range ops {
-				accumulator = operations[op](accumulator, uint64(nums[iOp+1]))
-			}
-			if target == accumulator {
-				result += target
-				return true
-			}
-			return false
-		}, base)
+		running.Add(1)
+		go func(target uint64, nums []int) {
+			defer func() {
+				running.Done()
+				bar.Add(1)
+			}()
+			opCount := len(nums) - 1
+			runOnAll(opCount, func(ops []int) bool {
+				var accumulator uint64 = uint64(nums[0])
+				for iOp, op := range ops {
+					accumulator = operations[op](accumulator, uint64(nums[iOp+1]))
+				}
+				if target == accumulator {
+					resultQueue <- target
+					return true
+				}
+				resultQueue <- 0
+				return false
+			}, base)
+		}(target, nums)
 	}
+
+	
+	go func() {
+		running.Wait()
+		close(resultQueue)
+	}()
+		
+	var result uint64 = 0
+	for next := range resultQueue {
+		result += next
+	}
+
 	return result
 }
 
 func runOnAll(opCount int, opFunc func(ops []int) bool, base int) {
-	max := base-1
+	max := base - 1
 	cancel := opFunc(make([]int, opCount, opCount))
 	ops := make([]int, opCount, opCount)
 	for !isAll(ops, max) {
-		if cancel { break }
-		
+		if cancel {
+			break
+		}
+
 		i := 0
 		for ops[i] == max {
 			ops[i] = 0
