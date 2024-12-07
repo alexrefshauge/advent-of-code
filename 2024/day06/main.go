@@ -60,6 +60,57 @@ func part1(input string) string {
 
 func part2(input string) string {
 	lines := strings.Split(strings.TrimRight(input, "\n"), "\n")
+	sx, sy := findStart(lines)
+	hDir := 0
+	vDir := -1
+	loops := 0
+
+	for y := range lines {
+		for x := range lines[y] {
+			if willLoopWithObstacle(lines, sx,sy,hDir,vDir, x,y) {
+				loops++
+			}
+		}
+	}
+
+	return fmt.Sprintf("%d", loops)
+}
+
+func willLoopWithObstacle(linesOriginal []string, x, y int, hDir, vDir int, oX, oY int) bool {
+	lines := make([]string, len(linesOriginal))
+	copy(lines, linesOriginal)
+	if oX == x && oY == y {
+		return false
+	}
+
+	if lines[oY][oX] == '#' {
+		return false
+	}
+
+	l := []rune(lines[oY])
+	l[oX] = '#'
+	lines[oY] = string(l)
+
+	beenHereBefore := make(map[string]bool)
+	for isInside(x, y, lines) {
+		if beenHereBefore[hashTurn(x,y,hDir, vDir)] {
+			return true
+		}
+		if isInside(x+hDir, y+vDir, lines) && lines[y+vDir][x+hDir] == '#' {
+			beenHereBefore[hashTurn(x,y,hDir, vDir)] = true
+			hDir, vDir = turn(hDir, vDir)
+			continue
+		}
+
+		x += hDir
+		y += vDir
+	}
+
+	return false
+}
+
+func part2_old(input string) string {
+	lines := strings.Split(strings.TrimRight(input, "\n"), "\n")
 	x, y := findStart(lines)
 	hDir := 0
 	vDir := -1
