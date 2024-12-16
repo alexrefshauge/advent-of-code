@@ -74,6 +74,7 @@ type agent struct {
 	score int
 }
 
+var explored map[vector.Vec]bool
 func explore(agents *queue.Queue[agent], walls map[vector.Vec]bool, lowest *int, end vector.Vec) {
 	a := agents.Next()
 
@@ -81,19 +82,23 @@ func explore(agents *queue.Queue[agent], walls map[vector.Vec]bool, lowest *int,
 		added := a.dir.Add(dir)
 		if walls[a.pos.Add(dir)] || (added.X == 0 && added.Y == 0) { continue }
 		score := a.score+1
-		if a.dir == dir {
+		
+		if a.dir != dir {
 			score += 1000
 		}
-		nextAgent := agent{pos: a.pos.Add(dir), dir: dir, score: score}
-		if *lowest != -1 && score > *lowest { continue }
+		newAgent := agent{pos: a.pos.Add(dir), dir: dir, score: score}
+		if *lowest != -1 && score > *lowest || explored[newAgent.pos] { continue }
 		
-		if nextAgent.pos != end {
-			agents.Push(nextAgent)
+		if !newAgent.pos.Equals(end) {
+			if explored[newAgent.pos] {
+				continue
+			}
+			explored[newAgent.pos] = true
+			agents.Push(newAgent)
+			continue
 		}
-		if *lowest == -1 {
-			*lowest = score
-		}
-		if score < *lowest {
+		
+		if *lowest == -1 || score < *lowest {
 			*lowest = score
 		}
 	}
@@ -104,18 +109,24 @@ func part1(input string) string {
 	agents := queue.New[agent]()
 	agents.Push(agent{pos: start, score: 0})
 	var lowest *int = new(int); *lowest = -1
+	explored = make(map[vector.Vec]bool)
 	
-	printWorld(walls, agents.All())
+	printWorld(walls, agents.All(), end)
 
+	i := 0
 	for agents.Size() > 0 {
 		explore(agents, walls, lowest, end)
-
-		fmt.Printf("\033[%dA", HEIGHT)
-		printWorld(walls, agents.All())
-		time.Sleep(time.Second)
+		if i % 50 == 0 {
+			i = 1
+			time.Sleep(1*time.Millisecond)
+			fmt.Printf("\033[%dA", HEIGHT)
+			printWorld(walls, agents.All(), end)
+		} else {
+			i++
+		}
 	}
 	
-	return fmt.Sprintf("%d", lowest)
+	return fmt.Sprintf("%d", *lowest)
 }
 
 func part2(input string) string {

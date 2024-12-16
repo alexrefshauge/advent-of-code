@@ -32,8 +32,8 @@ func (q *Queue[T]) Size() int {
 func (q *Queue[T]) All() []T {
 	all := make([]T, q.size, q.size)
 	node := q.head
-	for range q.size {
-		all = append(all, node.data)
+	for i := range q.size {
+		all[i] = node.data
 		node = node.next
 	}
 	return all
