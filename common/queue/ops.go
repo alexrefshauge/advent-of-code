@@ -13,7 +13,7 @@ func (q *Queue[T]) Push(element T) {
 	q.size++
 }
 
-func (q *Queue[T]) Next(element T) T {
+func (q *Queue[T]) Next() T {
 	head := q.head
 	if q.head == q.tail {
 		q.head = nil
@@ -27,4 +27,14 @@ func (q *Queue[T]) Next(element T) T {
 
 func (q *Queue[T]) Size() int {
 	return q.size
+}
+
+func (q *Queue[T]) All() []T {
+	all := make([]T, q.size, q.size)
+	node := q.head
+	for range q.size {
+		all = append(all, node.data)
+		node = node.next
+	}
+	return all
 }
