@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"flag"
 	"fmt"
+	"math/rand"
 	"os"
 	"strings"
 	"time"
@@ -72,53 +73,78 @@ type agent struct {
 	pos vector.Vec
 	dir vector.Vec
 	score int
+	cells []vector.Vec
 }
 
-var explored map[vector.Vec]bool
-func explore(agents *queue.Queue[agent], walls map[vector.Vec]bool, lowest *int, end vector.Vec) {
+func shuffle(slice []vector.Vec) {
+	for i := range slice {
+		j := rand.Intn(i + 1)
+		slice[i], slice[j] = slice[j], slice[i]
+	}
+}
+
+type path struct {
+	score int
+	cells []vector.Vec
+}
+
+var paths []path
+var animate = false
+
+func explore(agents *queue.Queue[agent], walls map[vector.Vec]bool, exploredCache map[vector.Vec]int, lowest *int, end vector.Vec) {
 	a := agents.Next()
 
-	for _, dir := range []vector.Vec{WEST,EAST,NORTH,SOUTH} {
+	dirs := []vector.Vec{NORTH, EAST, SOUTH, WEST}
+
+	for _, dir := range dirs {
 		added := a.dir.Add(dir)
-		if walls[a.pos.Add(dir)] || (added.X == 0 && added.Y == 0) { continue }
+		if walls[a.pos.Add(dir)] || added.Equals(vector.New(0,0)) { continue }
 		score := a.score+1
-		
-		if a.dir != dir {
+
+		if !a.dir.Equals(dir) {
 			score += 1000
 		}
+
 		newAgent := agent{pos: a.pos.Add(dir), dir: dir, score: score}
-		if *lowest != -1 && score > *lowest || explored[newAgent.pos] { continue }
-		
+		if *lowest != -1 && score > *lowest { continue }
+
+		cells := make([]vector.Vec, len(a.cells))
+		copy(cells, a.cells)
+		newAgent.cells = append(cells, newAgent.pos)
+
 		if !newAgent.pos.Equals(end) {
-			if explored[newAgent.pos] {
+			exploredScore, explored := exploredCache[newAgent.pos]
+			if explored && score > exploredScore+1000 {
 				continue
 			}
-			explored[newAgent.pos] = true
+			exploredCache[newAgent.pos] = score
 			agents.Push(newAgent)
 			continue
 		}
 		
-		if *lowest == -1 || score < *lowest {
+		if *lowest == -1 || score <= *lowest {
+			paths = append(paths, path{score: score ,cells: newAgent.cells})
 			*lowest = score
 		}
 	}
 }
 
-func part1(input string) string {
+func run(input string) int {
 	walls, start, end := parse(input)
 	agents := queue.New[agent]()
-	agents.Push(agent{pos: start, score: 0})
+	agents.Push(agent{pos: start, dir: EAST, score: 0, cells: []vector.Vec{start}})
 	var lowest *int = new(int); *lowest = -1
-	explored = make(map[vector.Vec]bool)
+	explored := make(map[vector.Vec]int)
 	
-	printWorld(walls, agents.All(), end)
+	if animate {printWorld(walls, agents.All(), end)}
 
 	i := 0
 	for agents.Size() > 0 {
-		explore(agents, walls, lowest, end)
-		if i % 50 == 0 {
+		explore(agents, walls, explored, lowest, end)
+		if !animate {continue} 
+		if agents.Size() != 0 && i % agents.Size() == 0 {
 			i = 1
-			time.Sleep(1*time.Millisecond)
+			time.Sleep(100*time.Millisecond)
 			fmt.Printf("\033[%dA", HEIGHT)
 			printWorld(walls, agents.All(), end)
 		} else {
@@ -126,9 +152,23 @@ func part1(input string) string {
 		}
 	}
 	
-	return fmt.Sprintf("%d", *lowest)
+	return *lowest
+}
+
+func part1(input string) string {
+	lowest := run(input)
+	return fmt.Sprintf("%d", lowest)
 }
 
 func part2(input string) string {
-	return input
+	paths = make([]path, 0)
+	seats := make(map[vector.Vec]bool)
+	lowest := run(input)
+	for _, p := range paths {
+		if p.score != lowest {continue}
+		for _, c := range p.cells {
+			seats[c] = true
+		}
+	}
+	return fmt.Sprintf("%d", len(seats))
 }
